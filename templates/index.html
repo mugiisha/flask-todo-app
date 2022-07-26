@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO app</title>
+    <style>
+        .error{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <form id="form" >
+        <input type="text" name="description" id="description" placeholder="Enter Description">
+        <input type="submit" value="submit" />
+    </form>
+    <p class="error" id="error">something went wrong!</p>
+    <ul id="todos">
+       {% for d in data%}
+       <li>{{ d.description }}</li>
+       {% endfor %}
+    </ul>
+
+    <script>
+        document.getElementById('form').onsubmit = function(e){
+            e.preventDefault();
+            fetch('/todos/create', {
+                method:'POST',
+                body: JSON.stringify({
+                    "description": document.getElementById('description').value
+                }),
+                headers:{
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+            .then(res => {
+                console.log(res)
+                const li = document.createElement('li');
+                li.innerHTML = res['description'];
+                document.getElementById('todos').appendChild(li)
+            
+            })
+            .catch(e => {
+                document.getElementById('error').className=''
+            })
+
+        }
+    </script>
+</body>
+</html>
