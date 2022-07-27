@@ -9,21 +9,83 @@
         .error{
             display: none;
         }
+        ul{
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        li {
+        clear: both;
+        width: 200px;
+        margin-bottom: 1em;
+      }
+      li button {
+        -webkit-appearance: none;
+        border: none;
+        outline: none;
+        color: red;
+        float: right;
+        cursor: pointer;
+        font-size: 20px;
+      }
+      .lists-wrapper, .todos-wrapper {
+        display: inline-block;
+        vertical-align: top;
+      }
     </style>
 </head>
 <body>
     <form id="form" >
-        <input type="text" name="description" id="description" placeholder="Enter Description">
+        <input  type="text" name="description" id="description" placeholder="Enter Description">
         <input type="submit" value="submit" />
     </form>
     <p class="error" id="error">something went wrong!</p>
     <ul id="todos">
        {% for d in data%}
-       <li>{{ d.description }}</li>
+       <li> <input class='check-completed' data-id="{{d.id}}" type="checkbox"{% if d.completed %} checked {% endif %}/> {{d.description }} <button class="delete" data-id="{{d.id}}">&cross;</button></li>
        {% endfor %}
     </ul>
 
     <script>
+        const checkBoxes = document.querySelectorAll('.check-completed')
+        for(let i = 0;i < checkBoxes.length;i++){
+            const checkBox=checkBoxes[i]
+            checkBox.onchange = function(e) {
+                const newCompletedState = e.target.checked
+                const todoId=e.target.dataset.id
+                fetch(`/todos/${todoId}/set-completed`,{
+                    method:'POST',
+                    body: JSON.stringify({
+                        completed: newCompletedState
+                    }),
+                    headers: {
+                        "content-type": "application/json"
+                    }
+                })
+                .catch(e => {
+                    document.getElementById('error').className = ''
+                })
+            }
+        }
+
+        const deleteButtons = document.querySelectorAll('.delete')
+        console.log(deleteButtons)
+        for(let i = 0;i < deleteButtons.length;i++){
+            const deleteButton=deleteButtons[i]
+            deleteButton.addEventListener('click', (e) =>{
+                e.preventDefault()
+                const todoId=e.target.dataset.id
+                fetch(`/todos/${todoId}/delete-todo`,{
+                    method:'DELETE'
+                })
+                .catch(e => {
+                    document.getElementById('error').className = ''
+                })
+            })
+            }
+
+
+
         document.getElementById('form').onsubmit = function(e){
             e.preventDefault();
             fetch('/todos/create', {
