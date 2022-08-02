@@ -16,7 +16,7 @@
         }
         li {
         clear: both;
-        width: 200px;
+        width: 300px;
         margin-bottom: 1em;
       }
       li button {
@@ -32,19 +32,45 @@
         display: inline-block;
         vertical-align: top;
       }
+      .lists-wrapper,.todos-wrapper {
+        display: inline-block;
+        vertical-align: top;
+      }
     </style>
 </head>
 <body>
-    <form id="form" >
-        <input  type="text" name="description" id="description" placeholder="Enter Description">
-        <input type="submit" value="submit" />
-    </form>
-    <p class="error" id="error">something went wrong!</p>
-    <ul id="todos">
-       {% for d in data%}
-       <li> <input class='check-completed' data-id="{{d.id}}" type="checkbox"{% if d.completed %} checked {% endif %}/> {{d.description }} <button class="delete" data-id="{{d.id}}">&cross;</button></li>
-       {% endfor %}
-    </ul>
+    <div class="lists-wrapper">
+        <h4>TODO Lists</h4>
+        <form action="" id="list-form">
+            <label for="list">Create list: </label>
+            <input type="text" name="list" id="list-name">
+            <input type="submit" value="Create List" >
+        </form>
+        <br>
+            <ul id="lists">
+                {% for list in lists %}
+                <li>
+                    <a href="/lists/{{list.id}}">{{list.name}}</a>
+                    <button class="deletelist" data-id="{{list.id}}">&cross;</button>
+                </li>
+                {% endfor %}
+            </ul>
+    </div>
+    <div class="todos-wrapper">
+        <h4>TODO items</h4>
+        <form id="form" >
+            <label for="description">Create Task: </label>
+            <input  type="text" name="description" id="description" placeholder="Enter Description">
+            <input type="submit" value="Create Todo" /><br>
+        </form>
+        <h4>{{active_list.name}}</h4>
+            <p class="error" id="error">something went wrong!</p>
+            <ul id="todos">
+            {% for todo in todos%}
+            <li> <input class='check-completed' data-id="{{todo.id}}" type="checkbox"{% if todo.completed %} checked {% endif %}/> {{todo.description }} <button class="delete" data-id="{{todo.id}}">&cross;</button></li>
+            {% endfor %}
+            </ul>
+    </div>
 
     <script>
         const checkBoxes = document.querySelectorAll('.check-completed')
@@ -69,7 +95,6 @@
         }
 
         const deleteButtons = document.querySelectorAll('.delete')
-        console.log(deleteButtons)
         for(let i = 0;i < deleteButtons.length;i++){
             const deleteButton=deleteButtons[i]
             deleteButton.addEventListener('click', (e) =>{
@@ -107,8 +132,45 @@
             .catch(e => {
                 document.getElementById('error').className=''
             })
-
         }
+        
+        document.getElementById('list-form').onsubmit = function(e){
+            e.preventDefault();
+            fetch('/lists/create', {
+                method:'POST',
+                body: JSON.stringify({
+                    "name": document.getElementById('list-name').value
+                }),
+                headers:{
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+            .then(res => {
+                console.log(res)
+                const li = document.createElement('li');
+                li.innerHTML = res['name'];
+                document.getElementById('lists').appendChild(li)
+            
+            })
+            .catch(e => {
+                document.getElementById('error').className=''
+            })
+        }
+
+        const deletelist = document.querySelectorAll('.deletelist')
+        for(let i = 0;i < deletelist.length;i++){
+            const deleteButton=deletelist[i]
+            deleteButton.addEventListener('click', (e) =>{
+                e.preventDefault()
+                const listId=e.target.dataset.id
+                fetch(`/lists/${listId}/delete-list`,{
+                    method:'DELETE'
+                })
+                .catch(e => {
+                    document.getElementById('error').className = ''
+                })
+            })
+            }
     </script>
 </body>
 </html>
